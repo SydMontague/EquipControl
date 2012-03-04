@@ -1,0 +1,11 @@
+name: EquipControl
+main: de.syd.equipcontrol.EquipControl
+version: 0.1
+description: Limit Weapons and Armor
+author: Syd
+permissions:
+    equipcontrol.weapon.<id>:
+    equipcontrol.weapon.<material>:
+    equipcontrol.armor.<id>:
+    equipcontrol.armor.<material>:
+    
