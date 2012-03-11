@@ -13,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -50,61 +51,75 @@ public class EquipControl extends JavaPlugin implements Listener
     public void onInventory(InventoryCloseEvent event)
     {
         if (event.getView().getType() == InventoryType.CRAFTING)
-        {
-            Player player = (Player) event.getPlayer();
-            PlayerInventory pinv = player.getInventory();
-
-            ItemStack helmet = pinv.getHelmet();
-            ItemStack chestplate = pinv.getChestplate();
-            ItemStack leggings = pinv.getLeggings();
-            ItemStack boots = pinv.getBoots();
-
-            if (helmet != null && armor.contains(helmet.getTypeId()))
-                if (!player.hasPermission("equipcontrol.armor." + helmet.getTypeId()) && !player.hasPermission("equipcontrol.armor." + helmet.getType().name()))
-                {
-                    player.sendMessage("You don't have the needed Permissions to wear this helemet");
-                    if (pinv.firstEmpty() >= 0)
-                        pinv.addItem(helmet);
-                    else
-                        player.getWorld().dropItem(player.getLocation(), helmet);
-                    pinv.setHelmet(new ItemStack(0));
-                }
-
-            if (chestplate != null && armor.contains(chestplate.getTypeId()))
-                if (!player.hasPermission("equipcontrol.armor." + chestplate.getTypeId()) && !player.hasPermission("equipcontrol.armor." + chestplate.getType().name()))
-                {
-                    player.sendMessage("You don't have the needed Permissions to wear this chestplate");
-                    if (pinv.firstEmpty() >= 0)
-                        pinv.addItem(chestplate);
-                    else
-                        player.getWorld().dropItem(player.getLocation(), chestplate);
-                    pinv.setChestplate(new ItemStack(0));
-                }
-
-            if (leggings != null && armor.contains(leggings.getTypeId()))
-                if (!player.hasPermission("equipcontrol.armor." + leggings.getTypeId()) && !player.hasPermission("equipcontrol.armor." + leggings.getType().name()))
-                {
-                    player.sendMessage("You don't have the needed Permissions to wear this leggings");
-                    if (pinv.firstEmpty() >= 0)
-                        pinv.addItem(leggings);
-                    else
-                        player.getWorld().dropItem(player.getLocation(), leggings);
-                    pinv.setLeggings(new ItemStack(0));
-                }
-
-            if (boots != null && armor.contains(boots.getTypeId()))
-                if (!player.hasPermission("equipcontrol.armor." + boots.getTypeId()) && !player.hasPermission("equipcontrol.armor." + boots.getType().name()))
-                {
-                    player.sendMessage("You don't have the needed Permissions to wear this boots");
-                    if (pinv.firstEmpty() >= 0)
-                        pinv.addItem(boots);
-                    else
-                        player.getWorld().dropItem(player.getLocation(), boots);
-                    pinv.setBoots(new ItemStack(0));
-                }
-        }
+            checkArmor((Player) event.getPlayer());
+    }
+    
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event)
+    {
+        checkArmor(event.getPlayer());
     }
 
+    /**
+     * check if a player uses a unallowed armor
+     * 
+     * @param player - the checked player
+     */
+    public void checkArmor(Player player)
+    {
+        PlayerInventory pinv = player.getInventory();
+        ItemStack helmet = pinv.getHelmet();
+        ItemStack chestplate = pinv.getChestplate();
+        ItemStack leggings = pinv.getLeggings();
+        ItemStack boots = pinv.getBoots();
+
+        if (helmet != null && armor.contains(helmet.getTypeId()))
+            if (!player.hasPermission("equipcontrol.armor." + helmet.getTypeId()) && !player.hasPermission("equipcontrol.armor." + helmet.getType().name()))
+            {
+                player.sendMessage("You don't have the needed Permissions to wear this helemet");
+                if (pinv.firstEmpty() >= 0)
+                    pinv.addItem(helmet);
+                else
+                    player.getWorld().dropItem(player.getLocation(), helmet);
+                pinv.setHelmet(new ItemStack(0));
+            }
+
+        if (chestplate != null && armor.contains(chestplate.getTypeId()))
+            if (!player.hasPermission("equipcontrol.armor." + chestplate.getTypeId()) && !player.hasPermission("equipcontrol.armor." + chestplate.getType().name()))
+            {
+                player.sendMessage("You don't have the needed Permissions to wear this chestplate");
+                if (pinv.firstEmpty() >= 0)
+                    pinv.addItem(chestplate);
+                else
+                    player.getWorld().dropItem(player.getLocation(), chestplate);
+                pinv.setChestplate(new ItemStack(0));
+            }
+
+        if (leggings != null && armor.contains(leggings.getTypeId()))
+            if (!player.hasPermission("equipcontrol.armor." + leggings.getTypeId()) && !player.hasPermission("equipcontrol.armor." + leggings.getType().name()))
+            {
+                player.sendMessage("You don't have the needed Permissions to wear this leggings");
+                if (pinv.firstEmpty() >= 0)
+                    pinv.addItem(leggings);
+                else
+                    player.getWorld().dropItem(player.getLocation(), leggings);
+                pinv.setLeggings(new ItemStack(0));
+            }
+
+        if (boots != null && armor.contains(boots.getTypeId()))
+            if (!player.hasPermission("equipcontrol.armor." + boots.getTypeId()) && !player.hasPermission("equipcontrol.armor." + boots.getType().name()))
+            {
+                player.sendMessage("You don't have the needed Permissions to wear this boots");
+                if (pinv.firstEmpty() >= 0)
+                    pinv.addItem(boots);
+                else
+                    player.getWorld().dropItem(player.getLocation(), boots);
+                pinv.setBoots(new ItemStack(0));
+            }
+    }
+
+    
+    
     /**
      * Checks Weapon on Damage
      * 
