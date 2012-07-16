@@ -25,4 +25,10 @@ checked_armor:
     - 315
     - 316
     - 317
+string:
+    weapon: "You don't have the needed permissions to use this weapon"
+    helmet: "You don't have the needed permissions to wear this helemet"
+    chest: "You don't have the needed permissions to wear this chestplate"
+    leggings: "You don't have the needed permissions to wear this leggings"
+    boots: "You don't have the needed permissions to wear this boots"
     
