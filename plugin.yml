@@ -1,6 +1,6 @@
 name: EquipControl
 main: de.syd.equipcontrol.EquipControl
-version: 0.2
+version: 0.4.0
 description: Limit Weapons and Armor
 author: SydMontague
 dev-url: http://dev.bukkit.org/server-mods/equipcontrol/
@@ -9,8 +9,12 @@ permissions:
         default: false
     equipcontrol.weapon.<material>:
         default: false
+    equipcontrol.weapon.<material|id>.<nametag>:
+        default: false
     equipcontrol.armor.<id>:
         default: false
     equipcontrol.armor.<material>:
+        default: false        
+    equipcontrol.armor.<material|id>.<nametag>:
         default: false
     
