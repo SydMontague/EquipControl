@@ -43,10 +43,8 @@ public class EquipControl extends JavaPlugin implements Listener
         
         loadConfig();
         
-        weapon = config.getIntegerList("checked_weapons");
-        armor = config.getIntegerList("checked_armor");
         nopermweap = setColored(config.getString("string.weapon", "You don't have the needed permissions to use this weapon"));
-        nopermhelmet = setColored(config.getString("string.helmet", "You don't have the needed permissions to wear this helemet"));
+        nopermhelmet = setColored(config.getString("string.helmet", "You don't have the needed permissions to wear this helmet"));
         nopermchestplate = setColored(config.getString("string.chest", "You don't have the needed permissions to wear this chestplate"));
         nopermleggings = setColored(config.getString("string.leggings", "You don't have the needed permissions to wear this leggings"));
         nopermboots = setColored(config.getString("string.boots", "You don't have the needed permissions to wear this boots"));
@@ -191,12 +189,12 @@ public class EquipControl extends JavaPlugin implements Listener
     
     private String getArmorExtraPerm(ItemStack i)
     {
-        return (i.hasItemMeta() && i.getItemMeta().hasDisplayName() && armornew.get(i.getTypeId()).containsKey(i.getItemMeta().getDisplayName())) ? "." + armornew.get(i.getTypeId()).get(i.getItemMeta().getDisplayName()) : "";
+        return (i.hasItemMeta() && i.getItemMeta().hasDisplayName() && armornew.containsKey(i.getTypeId()) && armornew.get(i.getTypeId()).containsKey(i.getItemMeta().getDisplayName())) ? "." + armornew.get(i.getTypeId()).get(i.getItemMeta().getDisplayName()) : "";
     }
     
     private String getWeaponExtraPerm(ItemStack i)
     {
-        return (i.hasItemMeta() && i.getItemMeta().hasDisplayName() && weaponnew.get(i.getTypeId()).containsKey(i.getItemMeta().getDisplayName())) ? "." + weaponnew.get(i.getTypeId()).get(i.getItemMeta().getDisplayName()) : "";
+        return (i.hasItemMeta() && i.getItemMeta().hasDisplayName() && weaponnew.containsKey(i.getTypeId()) && weaponnew.get(i.getTypeId()).containsKey(i.getItemMeta().getDisplayName())) ? "." + weaponnew.get(i.getTypeId()).get(i.getItemMeta().getDisplayName()) : "";
     }
     
     /**

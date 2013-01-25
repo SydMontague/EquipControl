@@ -1,6 +1,6 @@
 name: EquipControl
 main: de.syd.equipcontrol.EquipControl
-version: 0.4.0
+version: 0.4.2
 description: Limit Weapons and Armor
 author: SydMontague
 dev-url: http://dev.bukkit.org/server-mods/equipcontrol/

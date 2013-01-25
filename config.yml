@@ -13,7 +13,7 @@ checked_armor:
     - 301
 string:
     weapon: "You don't have the needed permissions to use this weapon"
-    helmet: "You don't have the needed permissions to wear this helemet"
+    helmet: "You don't have the needed permissions to wear this helmet"
     chest: "You don't have the needed permissions to wear this chestplate"
     leggings: "You don't have the needed permissions to wear this leggings"
     boots: "You don't have the needed permissions to wear this boots"
