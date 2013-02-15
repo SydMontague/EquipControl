@@ -1,4 +1,4 @@
-package de.syd.equipcontrol;
+package de.craftlancer.equipcontrol;
 
 import java.io.File;
 import java.util.ArrayList;
