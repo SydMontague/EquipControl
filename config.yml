@@ -17,6 +17,9 @@ string:
     chest: "You don't have the needed permissions to wear this chestplate"
     leggings: "You don't have the needed permissions to wear this leggings"
     boots: "You don't have the needed permissions to wear this boots"
+    namedarmor: "You don't have the needed permissions to wear %item%"
+    namedweapon: "You don't have the needed permissions to use %item%"
 CheckArmorOnDamage: false
 CheckArmorPeriodical: false
 CheckArmorTimer: 30
+useItemName: false

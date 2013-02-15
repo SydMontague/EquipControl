@@ -32,8 +32,11 @@ public class EquipControl extends JavaPlugin implements Listener
     String nopermchestplate;
     String nopermleggings;
     String nopermboots;
+    String nopermnamedarmor;
+    String nopermnamedweap;
     boolean checkarmorondmg = false;
     boolean armorschedule = false;
+    boolean useItemName = true;
     long timer = 600;
     Logger log = Logger.getLogger("Minecraft");
     
@@ -41,18 +44,19 @@ public class EquipControl extends JavaPlugin implements Listener
     {
         getServer().getPluginManager().registerEvents(this, this);
         config = getConfig();
-        if (!new File(this.getDataFolder().getPath() + File.separatorChar + "config.yml").exists())
+        
+        if (!new File(this.getDataFolder(), "config.yml").exists())
             saveDefaultConfig();
         
         loadConfig();
         
-        if(armorschedule)
+        if (armorschedule)
             getServer().getScheduler().runTaskTimer(this, new Runnable()
             {
                 public void run()
                 {
-                   for(Player p : getServer().getOnlinePlayers())
-                       checkArmor(p);
+                    for (Player p : getServer().getOnlinePlayers())
+                        checkArmor(p);
                 }
             }, timer, timer);
     }
@@ -79,6 +83,7 @@ public class EquipControl extends JavaPlugin implements Listener
             }
             catch (NumberFormatException e)
             {
+                log.warning("Invaild ItemID: " + key);
             }
         
         for (String key : config.getConfigurationSection(a).getKeys(false))
@@ -95,6 +100,7 @@ public class EquipControl extends JavaPlugin implements Listener
             }
             catch (NumberFormatException e)
             {
+                log.warning("Invaild ItemID: " + key);
             }
         
         nopermweap = setColored(config.getString("string.weapon", "You don't have the needed permissions to use this weapon"));
@@ -102,10 +108,13 @@ public class EquipControl extends JavaPlugin implements Listener
         nopermchestplate = setColored(config.getString("string.chest", "You don't have the needed permissions to wear this chestplate"));
         nopermleggings = setColored(config.getString("string.leggings", "You don't have the needed permissions to wear this leggings"));
         nopermboots = setColored(config.getString("string.boots", "You don't have the needed permissions to wear this boots"));
+        nopermnamedweap = setColored(config.getString("string.namedweapon", "You don't have the needed permissions to use %item%"));
+        nopermnamedarmor = setColored(config.getString("string.namedarmor", "You don't have the needed permissions to wear %item%"));
         
         checkarmorondmg = config.getBoolean("CheckArmorOnDamage", false);
         armorschedule = config.getBoolean("CheckArmorPeriodical", false);
         timer = config.getLong("CheckArmorTimer", 30) * 20;
+        useItemName = config.getBoolean("useItemName", false);
     }
     
     public void onDisable()
@@ -146,7 +155,7 @@ public class EquipControl extends JavaPlugin implements Listener
         ItemStack chestplate = pinv.getChestplate();
         ItemStack leggings = pinv.getLeggings();
         ItemStack boots = pinv.getBoots();
-                
+        
         if (helmet != null && (armornew.containsKey(helmet.getTypeId()) || (armor != null && armor.contains(helmet.getTypeId()))))
         {
             String s = getArmorExtraPerm(helmet);
@@ -157,7 +166,11 @@ public class EquipControl extends JavaPlugin implements Listener
                 else
                     player.getWorld().dropItem(player.getLocation(), helmet);
                 pinv.setHelmet(new ItemStack(0));
-                player.sendMessage(nopermhelmet);
+                
+                if (!s.equalsIgnoreCase(""))
+                    player.sendMessage(nopermnamedarmor.replace("%item%", helmet.getItemMeta().getDisplayName()));
+                else
+                    player.sendMessage(nopermhelmet);
             }
         }
         
@@ -171,7 +184,11 @@ public class EquipControl extends JavaPlugin implements Listener
                 else
                     player.getWorld().dropItem(player.getLocation(), chestplate);
                 pinv.setChestplate(new ItemStack(0));
-                player.sendMessage(nopermchestplate);
+                
+                if (!s.equalsIgnoreCase(""))
+                    player.sendMessage(nopermnamedarmor.replace("%item%", chestplate.getItemMeta().getDisplayName()));
+                else
+                    player.sendMessage(nopermchestplate);
             }
         }
         
@@ -185,7 +202,11 @@ public class EquipControl extends JavaPlugin implements Listener
                 else
                     player.getWorld().dropItem(player.getLocation(), leggings);
                 pinv.setLeggings(new ItemStack(0));
-                player.sendMessage(nopermleggings);
+                
+                if (!s.equalsIgnoreCase(""))
+                    player.sendMessage(nopermnamedarmor.replace("%item%", leggings.getItemMeta().getDisplayName()));
+                else
+                    player.sendMessage(nopermleggings);
             }
         }
         
@@ -199,7 +220,11 @@ public class EquipControl extends JavaPlugin implements Listener
                 else
                     player.getWorld().dropItem(player.getLocation(), boots);
                 pinv.setBoots(new ItemStack(0));
-                player.sendMessage(nopermboots);
+                
+                if (!s.equalsIgnoreCase(""))
+                    player.sendMessage(nopermnamedarmor.replace("%item%", boots.getItemMeta().getDisplayName()));
+                else
+                    player.sendMessage(nopermboots);
             }
         }
     }
@@ -235,7 +260,11 @@ public class EquipControl extends JavaPlugin implements Listener
                 if (!player.hasPermission("equipcontrol.weapon." + item.getTypeId() + s) && !player.hasPermission("equipcontrol.weapon." + item.getType().name() + s))
                 {
                     event.setCancelled(true);
-                    player.sendMessage(nopermweap);
+                    
+                    if (!s.equalsIgnoreCase(""))
+                        player.sendMessage(nopermnamedweap.replace("%item%", item.getItemMeta().getDisplayName()));
+                    else
+                        player.sendMessage(nopermweap);
                 }
         }
         else if (event.getDamager() instanceof Arrow && (weaponnew.containsKey(261) || (weapon != null && weapon.contains(261))))
@@ -247,7 +276,11 @@ public class EquipControl extends JavaPlugin implements Listener
                 if (!player.hasPermission("equipcontrol.weapon.261" + s) && !player.hasPermission("equipcontrol.weapon.bow" + s))
                 {
                     event.setCancelled(true);
-                    player.sendMessage(nopermweap);
+                    
+                    if (!s.equalsIgnoreCase(""))
+                        player.sendMessage(nopermnamedweap.replace("%item%", player.getItemInHand().getItemMeta().getDisplayName()));
+                    else
+                        player.sendMessage(nopermweap);
                 }
             }
         }
