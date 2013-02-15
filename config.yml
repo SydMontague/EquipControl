@@ -17,4 +17,6 @@ string:
     chest: "You don't have the needed permissions to wear this chestplate"
     leggings: "You don't have the needed permissions to wear this leggings"
     boots: "You don't have the needed permissions to wear this boots"
-    
+CheckArmorOnDamage: false
+CheckArmorPeriodical: false
+CheckArmorTimer: 30

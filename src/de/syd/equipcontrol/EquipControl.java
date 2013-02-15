@@ -32,6 +32,9 @@ public class EquipControl extends JavaPlugin implements Listener
     String nopermchestplate;
     String nopermleggings;
     String nopermboots;
+    boolean checkarmorondmg = false;
+    boolean armorschedule = false;
+    long timer = 600;
     Logger log = Logger.getLogger("Minecraft");
     
     public void onEnable()
@@ -43,11 +46,15 @@ public class EquipControl extends JavaPlugin implements Listener
         
         loadConfig();
         
-        nopermweap = setColored(config.getString("string.weapon", "You don't have the needed permissions to use this weapon"));
-        nopermhelmet = setColored(config.getString("string.helmet", "You don't have the needed permissions to wear this helmet"));
-        nopermchestplate = setColored(config.getString("string.chest", "You don't have the needed permissions to wear this chestplate"));
-        nopermleggings = setColored(config.getString("string.leggings", "You don't have the needed permissions to wear this leggings"));
-        nopermboots = setColored(config.getString("string.boots", "You don't have the needed permissions to wear this boots"));
+        if(armorschedule)
+            getServer().getScheduler().runTaskTimer(this, new Runnable()
+            {
+                public void run()
+                {
+                   for(Player p : getServer().getOnlinePlayers())
+                       checkArmor(p);
+                }
+            }, timer, timer);
     }
     
     private void loadConfig()
@@ -89,6 +96,16 @@ public class EquipControl extends JavaPlugin implements Listener
             catch (NumberFormatException e)
             {
             }
+        
+        nopermweap = setColored(config.getString("string.weapon", "You don't have the needed permissions to use this weapon"));
+        nopermhelmet = setColored(config.getString("string.helmet", "You don't have the needed permissions to wear this helmet"));
+        nopermchestplate = setColored(config.getString("string.chest", "You don't have the needed permissions to wear this chestplate"));
+        nopermleggings = setColored(config.getString("string.leggings", "You don't have the needed permissions to wear this leggings"));
+        nopermboots = setColored(config.getString("string.boots", "You don't have the needed permissions to wear this boots"));
+        
+        checkarmorondmg = config.getBoolean("CheckArmorOnDamage", false);
+        armorschedule = config.getBoolean("CheckArmorPeriodical", false);
+        timer = config.getLong("CheckArmorTimer", 30) * 20;
     }
     
     public void onDisable()
@@ -205,6 +222,9 @@ public class EquipControl extends JavaPlugin implements Listener
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event)
     {
+        if (checkarmorondmg && event.getEntity() instanceof Player)
+            checkArmor((Player) event.getEntity());
+        
         if (event.getDamager() instanceof Player)
         {
             Player player = (Player) event.getDamager();
