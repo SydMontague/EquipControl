@@ -122,6 +122,8 @@ public class EquipControl extends JavaPlugin implements Listener
         config = null;
         armor = null;
         weapon = null;
+        
+        getServer().getScheduler().cancelTasks(this);
     }
     
     /**
