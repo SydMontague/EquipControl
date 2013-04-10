@@ -12,13 +12,16 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class EquipControl extends JavaPlugin implements Listener
 {
@@ -40,6 +43,7 @@ public class EquipControl extends JavaPlugin implements Listener
     long timer = 600;
     Logger log = Logger.getLogger("Minecraft");
     
+    @Override
     public void onEnable()
     {
         getServer().getPluginManager().registerEvents(this, this);
@@ -53,12 +57,23 @@ public class EquipControl extends JavaPlugin implements Listener
         if (armorschedule)
             getServer().getScheduler().runTaskTimer(this, new Runnable()
             {
+                @Override
                 public void run()
                 {
                     for (Player p : getServer().getOnlinePlayers())
                         checkArmor(p);
                 }
             }, timer, timer);
+    }
+    
+    @Override
+    public void onDisable()
+    {
+        config = null;
+        armor = null;
+        weapon = null;
+        
+        getServer().getScheduler().cancelTasks(this);
     }
     
     private void loadConfig()
@@ -117,20 +132,6 @@ public class EquipControl extends JavaPlugin implements Listener
         useItemName = config.getBoolean("useItemName", false);
     }
     
-    public void onDisable()
-    {
-        config = null;
-        armor = null;
-        weapon = null;
-        
-        getServer().getScheduler().cancelTasks(this);
-    }
-    
-    /**
-     * Checks ArmorSlots for forbidden equipment on closing Inventory
-     * 
-     * @param event
-     */
     @EventHandler
     public void onInventory(InventoryCloseEvent event)
     {
@@ -144,91 +145,94 @@ public class EquipControl extends JavaPlugin implements Listener
         checkArmor(event.getPlayer());
     }
     
+    @EventHandler
+    public void onDamage(EntityDamageByEntityEvent event)
+    {
+        if (checkarmorondmg && event.getEntity() instanceof Player)
+            checkArmor((Player) event.getEntity());
+        
+        if (event.getDamager() instanceof Player)
+            event.setCancelled(checkWeapon((Player) event.getDamager()));
+        else if (event.getDamager() instanceof Arrow && ((Arrow) event.getDamager()).getShooter() instanceof Player)
+            event.setCancelled(checkWeapon((Player) ((Arrow) event.getDamager()).getShooter()));
+    }
+    
+    @EventHandler
+    public void onRightClick(final PlayerInteractEvent e)
+    {
+        if ((e.getAction() == Action.RIGHT_CLICK_BLOCK) || (e.getAction().equals(Action.RIGHT_CLICK_AIR)))
+            new BukkitRunnable()
+            {
+                @Override
+                public void run()
+                {
+                    checkArmor(e.getPlayer());
+                }
+            }.runTaskLater(this, 0);        
+    }
+    
     /**
-     * check if a player uses a unallowed armor
+     * check if a player uses a disallowed armor
      * 
      * @param player
-     *            - the checked player
+     *            the checked player
      */
-    private void checkArmor(Player player)
+    protected void checkArmor(Player player)
     {
         PlayerInventory pinv = player.getInventory();
-        ItemStack helmet = pinv.getHelmet();
-        ItemStack chestplate = pinv.getChestplate();
-        ItemStack leggings = pinv.getLeggings();
-        ItemStack boots = pinv.getBoots();
+        ItemStack[] ac = pinv.getArmorContents();
         
-        if (helmet != null && (armornew.containsKey(helmet.getTypeId()) || (armor != null && armor.contains(helmet.getTypeId()))))
+        for (int i = 0; i < ac.length; i++)
         {
-            String s = getArmorExtraPerm(helmet);
-            if (!player.hasPermission("equipcontrol.armor." + helmet.getTypeId() + s) && !player.hasPermission("equipcontrol.armor." + helmet.getType().name() + s))
+            ItemStack item = ac[i];
+            
+            if (item != null && (armornew.containsKey(item.getTypeId()) || (armor != null && armor.contains(item.getTypeId()))))
             {
-                if (pinv.firstEmpty() >= 0)
-                    pinv.addItem(helmet);
-                else
-                    player.getWorld().dropItem(player.getLocation(), helmet);
-                pinv.setHelmet(new ItemStack(0));
-                
-                if (!s.equalsIgnoreCase(""))
-                    player.sendMessage(nopermnamedarmor.replace("%item%", helmet.getItemMeta().getDisplayName()));
-                else
-                    player.sendMessage(nopermhelmet);
+                String s = getArmorExtraPerm(item);
+                if (!player.hasPermission("equipcontrol.armor." + item.getTypeId() + s) && !player.hasPermission("equipcontrol.armor." + item.getType().name() + s))
+                {
+                    if (pinv.firstEmpty() >= 0)
+                        pinv.addItem(item);
+                    else
+                        player.getWorld().dropItem(player.getLocation(), item);
+                    
+                    ac[i] = new ItemStack(0);
+                    
+                    if (!s.equalsIgnoreCase(""))
+                        player.sendMessage(nopermnamedarmor.replace("%item%", item.getItemMeta().getDisplayName()));
+                    else
+                        player.sendMessage(getSlotMessage(i));
+                }
             }
         }
         
-        if (chestplate != null && (armornew.containsKey(chestplate.getTypeId()) || (armor != null && armor.contains(chestplate.getTypeId()))))
-        {
-            String s = getArmorExtraPerm(chestplate);
-            if (!player.hasPermission("equipcontrol.armor." + chestplate.getTypeId() + s) && !player.hasPermission("equipcontrol.armor." + chestplate.getType().name() + s))
-            {
-                if (pinv.firstEmpty() >= 0)
-                    pinv.addItem(chestplate);
-                else
-                    player.getWorld().dropItem(player.getLocation(), chestplate);
-                pinv.setChestplate(new ItemStack(0));
-                
-                if (!s.equalsIgnoreCase(""))
-                    player.sendMessage(nopermnamedarmor.replace("%item%", chestplate.getItemMeta().getDisplayName()));
-                else
-                    player.sendMessage(nopermchestplate);
-            }
-        }
+        pinv.setArmorContents(ac);
+    }
+    
+    /**
+     * check if a player uses a disallowed weapon
+     * 
+     * @param player
+     *            the checked player
+     * @return true when he is allowed to, false when not
+     */
+    public boolean checkWeapon(Player player)
+    {
+        ItemStack item = player.getItemInHand();
+        String s = getWeaponExtraPerm(item);
         
-        if (leggings != null && (armornew.containsKey(leggings.getTypeId()) || (armor != null && armor.contains(leggings.getTypeId()))))
-        {
-            String s = getArmorExtraPerm(leggings);
-            if (!player.hasPermission("equipcontrol.armor." + leggings.getTypeId() + s) && !player.hasPermission("equipcontrol.armor." + leggings.getType().name() + s))
+        if (weaponnew.containsKey(item.getTypeId()) || (weapon != null && weapon.contains(item.getTypeId())))
+            if (!player.hasPermission("equipcontrol.weapon." + item.getTypeId() + s) && !player.hasPermission("equipcontrol.weapon." + item.getType().name() + s))
             {
-                if (pinv.firstEmpty() >= 0)
-                    pinv.addItem(leggings);
-                else
-                    player.getWorld().dropItem(player.getLocation(), leggings);
-                pinv.setLeggings(new ItemStack(0));
-                
                 if (!s.equalsIgnoreCase(""))
-                    player.sendMessage(nopermnamedarmor.replace("%item%", leggings.getItemMeta().getDisplayName()));
+                    player.sendMessage(nopermnamedweap.replace("%item%", item.getItemMeta().getDisplayName()));
                 else
-                    player.sendMessage(nopermleggings);
+                    player.sendMessage(nopermweap);
+                
+                return true;
             }
-        }
         
-        if (boots != null && (armornew.containsKey(boots.getTypeId()) || (armor != null && armor.contains(boots.getTypeId()))))
-        {
-            String s = getArmorExtraPerm(boots);
-            if (!player.hasPermission("equipcontrol.armor." + boots.getTypeId() + s) && !player.hasPermission("equipcontrol.armor." + boots.getType().name() + s))
-            {
-                if (pinv.firstEmpty() >= 0)
-                    pinv.addItem(boots);
-                else
-                    player.getWorld().dropItem(player.getLocation(), boots);
-                pinv.setBoots(new ItemStack(0));
-                
-                if (!s.equalsIgnoreCase(""))
-                    player.sendMessage(nopermnamedarmor.replace("%item%", boots.getItemMeta().getDisplayName()));
-                else
-                    player.sendMessage(nopermboots);
-            }
-        }
+        return false;
     }
     
     private String getArmorExtraPerm(ItemStack i)
@@ -241,50 +245,20 @@ public class EquipControl extends JavaPlugin implements Listener
         return (i.hasItemMeta() && i.getItemMeta().hasDisplayName() && weaponnew.containsKey(i.getTypeId()) && weaponnew.get(i.getTypeId()).containsKey(i.getItemMeta().getDisplayName())) ? "." + weaponnew.get(i.getTypeId()).get(i.getItemMeta().getDisplayName()) : "";
     }
     
-    /**
-     * Checks Weapon on Damage
-     * 
-     * @param event
-     */
-    @EventHandler
-    public void onDamage(EntityDamageByEntityEvent event)
+    private String getSlotMessage(int i)
     {
-        if (checkarmorondmg && event.getEntity() instanceof Player)
-            checkArmor((Player) event.getEntity());
-        
-        if (event.getDamager() instanceof Player)
+        switch (i)
         {
-            Player player = (Player) event.getDamager();
-            ItemStack item = player.getItemInHand();
-            String s = getWeaponExtraPerm(item);
-            
-            if (weaponnew.containsKey(item.getTypeId()) || (weapon != null && weapon.contains(item.getTypeId())))
-                if (!player.hasPermission("equipcontrol.weapon." + item.getTypeId() + s) && !player.hasPermission("equipcontrol.weapon." + item.getType().name() + s))
-                {
-                    event.setCancelled(true);
-                    
-                    if (!s.equalsIgnoreCase(""))
-                        player.sendMessage(nopermnamedweap.replace("%item%", item.getItemMeta().getDisplayName()));
-                    else
-                        player.sendMessage(nopermweap);
-                }
-        }
-        else if (event.getDamager() instanceof Arrow && (weaponnew.containsKey(261) || (weapon != null && weapon.contains(261))))
-        {
-            if (((Arrow) event.getDamager()).getShooter() instanceof Player)
-            {
-                Player player = (Player) ((Arrow) event.getDamager()).getShooter();
-                String s = getWeaponExtraPerm(player.getItemInHand());
-                if (!player.hasPermission("equipcontrol.weapon.261" + s) && !player.hasPermission("equipcontrol.weapon.bow" + s))
-                {
-                    event.setCancelled(true);
-                    
-                    if (!s.equalsIgnoreCase(""))
-                        player.sendMessage(nopermnamedweap.replace("%item%", player.getItemInHand().getItemMeta().getDisplayName()));
-                    else
-                        player.sendMessage(nopermweap);
-                }
-            }
+            case 0:
+                return nopermboots;
+            case 1:
+                return nopermleggings;
+            case 2:
+                return nopermchestplate;
+            case 3:
+                return nopermhelmet;
+            default:
+                return "ERROR, WRONG SLOT NUMBER";
         }
     }
     
