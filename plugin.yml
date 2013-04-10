@@ -1,6 +1,6 @@
 name: EquipControl
 main: de.craftlancer.equipcontrol.EquipControl
-version: 0.5.0
+version: 0.6.0
 description: Limit Weapons and Armor
 author: SydMontague
 dev-url: http://dev.bukkit.org/server-mods/equipcontrol/
